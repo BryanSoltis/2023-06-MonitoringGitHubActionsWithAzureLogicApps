@@ -1,0 +1,175 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workflows_name": {
+      "type": "String"
+    }
+  },
+    "variables": {},
+    "resources": [
+      {
+        "type": "Microsoft.Logic/workflows",
+        "apiVersion": "2017-07-01",
+        "name": "[parameters('workflows_name')]",
+        "location": "eastus2",
+        "properties": {
+          "state": "Enabled",
+          "definition": {
+            "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+            "contentVersion": "1.0.0.0",
+            "parameters": {},
+            "triggers": {
+              "manual": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                  "schema": {
+                    "properties": {
+                      "$content": {
+                        "type": "string"
+                      },
+                      "$content-type": {
+                        "type": "string"
+                      },
+                      "$formdata": {
+                        "items": {
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "value"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              }
+            },
+            "actions": {
+              "Loop_over_formdata_array": {
+                "foreach": "@triggerBody()?['$formdata']",
+                "actions": {
+                  "Check_for_the_payload_key": {
+                    "actions": {
+                      "Check_run_conclusion_for_failure_when_action_is_completed": {
+                        "actions": {},
+                        "runAfter": {
+                          "Parse_payload_JSON_": [
+                            "Succeeded"
+                          ]
+                        },
+                        "expression": {
+                          "and": [
+                            {
+                              "equals": [
+                                "@body('Parse_payload_JSON_')?['workflow_run']?['conclusion']",
+                                "failure"
+                              ]
+                            },
+                            {
+                              "equals": [
+                                "@body('Parse_payload_JSON_')?['action']",
+                                "completed"
+                              ]
+                            }
+                          ]
+                        },
+                        "type": "If"
+                      },
+                      "Parse_payload_JSON_": {
+                        "runAfter": {},
+                        "type": "ParseJson",
+                        "inputs": {
+                          "content": "@items('Loop_over_formdata_array')?['value']",
+                          "schema": {
+                            "properties": {
+                              "action": {
+                                "type": "string"
+                              },
+                              "workflow": {
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "workflow_run": {
+                                "properties": {
+                                  "conclusion": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "created_at": {
+                                    "type": "string"
+                                  },
+                                  "display_title": {
+                                    "type": "string"
+                                  },
+                                  "event": {
+                                    "type": "string"
+                                  },
+                                  "repository": {
+                                    "properties": {
+                                      "id": {
+                                        "type": "integer"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "run_started_at": {
+                                    "type": "string"
+                                  },
+                                  "status": {
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        }
+                      }
+                    },
+                    "runAfter": {},
+                    "expression": {
+                      "and": [
+                        {
+                          "equals": [
+                            "@items('Loop_over_formdata_array')?['key']",
+                            "payload"
+                          ]
+                        }
+                      ]
+                    },
+                    "type": "If"
+                  }
+                },
+                "runAfter": {},
+                "type": "Foreach"
+              }
+            },
+            "outputs": {}
+          },
+          "parameters": {}
+        }
+      }
+    ]
+}
