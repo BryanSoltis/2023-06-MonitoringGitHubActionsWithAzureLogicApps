@@ -1,15 +1,4 @@
-# DemoRepo1
+# 2023-06 Monitoring GitHub Actions with Azure Logic Apps
 
-Demo text 1
+This repository contains refenerce material for the following blog article:
 
-Demo text 2
-
-Demo Text 3
-
-Demo Text 4
-
-Demo Text 5
-
-Demo Text 6
-
-Demo Text 7
