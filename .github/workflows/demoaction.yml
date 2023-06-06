@@ -1,0 +1,70 @@
+name: DemoPipeline3
+on:
+  workflow_dispatch:
+    inputs:
+      NAME:
+        required: false
+        description: Please tell me your name?
+      DESC:
+        required: false
+        description: Describe about the job details
+      BRANCH:
+        required: true
+        description: 'Choose branch (Valid options: Master, Dev)'
+jobs:
+  Printing_Parameters:
+    name: Printing Parameters
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: echo message
+      run: echo "Hello ${{ inputs.NAME }}"
+    - name: echo message
+      run: 'echo "Job Details: ${{ inputs.DESC }}"'
+    - name: echo message
+      run: 'echo "Skip Running Test case ?: ${{ inputs.SKIP_TEST }}"'
+    - name: echo message
+      run: 'echo "Branch Choice: ${{ inputs.BRANCH }}"'
+    - name: echo message
+      run: 'echo "SONAR Password: ${{ inputs.SONAR_SERVER_PWD }}"'
+  Prepare:
+    runs-on: ubuntu-latest
+    env:
+#       # This item has no matching transformer
+#       START: "${sh(script: 'set +x && date +%s', returnStdout: true )}"
+#       # This item has no matching transformer
+#       RESOURCEGROUP: '"${{ env.PROJECTNAME }}-kaas"'
+    needs: Printing_Parameters
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+    - name: sh
+      shell: bash
+      run: |-
+        """
+                  set +x
+                  set -o pipefail
+                  source ./support/remove/settings_headers_initial_logs.sh   # redirects handled in script
+                  set +e
+                  source ./support/common/metrics.sh -d
+                  export USED_IMAGE=${{ env.imageName }}
+                  source ./support/common/tools_versions_log.sh | tee -a ${{ env.RESULT_FILE }}
+                  set -e
+                  source ./support/common/build_info.sh | tee -a ${{ env.RESULT_FILE }}
+                  source ./support/common/stage_end.sh | tee -a ${{ env.RESULT_FILE }}
+                """
+  Block_master_branch:
+    if: github.ref == 'refs/heads/master'
+    name: Block master branch
+    runs-on: ubuntu-latest
+    needs: Prepare
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3.5.0
+#     # This item has no matching transformer
+#     - error:
+#       - key: message
+#         value:
+#           isLiteral: false
+#           value: '"Build of branch \"${{ env.BRANCH_NAME }}\" not allowed"'
