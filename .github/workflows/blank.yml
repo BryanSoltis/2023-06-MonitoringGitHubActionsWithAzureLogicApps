@@ -15,7 +15,7 @@ on:
 
 jobs:
   job2:
-    runs-on:  =${{vars.DEMOVARIABLE1}}
+    runs-on:  ${{vars.DEMOVARIABLE1}}
     steps:
       - name: step1
         run: echo "test123"
