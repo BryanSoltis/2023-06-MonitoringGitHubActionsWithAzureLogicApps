@@ -14,17 +14,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  job1:
-    runs-on: ubuntu-latest
-    # Map a step output to a job output
-    outputs:
-      output1: ${{ steps.step1.outputs.test }}
-    steps:
-      - id: step1
-        run: echo "test=${{vars.DEMOVARIABLE1}}" >> "$GITHUB_OUTPUT"
   job2:
-    runs-on:  ${{needs.job1.outputs.output1}}
-    needs: job1
+    runs-on:  =${{vars.DEMOVARIABLE1}}
     steps:
       - name: step1
         run: echo "test123"
